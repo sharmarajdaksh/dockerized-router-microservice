@@ -39,4 +39,4 @@ sequelize
 	})
 	.catch(() => {
 		console.log(`[  SECRETS MICROSERVICE : FAILED TO START ]`);
-	});
+    });

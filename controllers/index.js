@@ -1,4 +1,7 @@
-const bcrypt = require('bcryptjs');
+const Cryptr = require('cryptr');
+
+const CRYPTR_SECRET = process.env.CRYPTR_SECRET;
+const cryptr = new Cryptr('CRYPTR_SECRET');
 
 const Secret = require('../models/secret');
 
@@ -10,7 +13,12 @@ exports.getSecrets = (req, res, next) => {
 			username,
 		},
 	}).then((secrets) => {
-		res.status(200).json(secrets);
+		res.status(200).json(
+			secrets.map((secret) => {
+				secret.value = cryptr.decrypt(secret.value);
+				return secret;
+			})
+		);
 	});
 };
 
@@ -27,7 +35,7 @@ exports.addSecret = (req, res, next) => {
 	Secret.create({
 		username,
 		key,
-		value,
+		value: cryptr.encrypt(value),
 	})
 		.then((secret) => {
 			return secret.save();

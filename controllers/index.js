@@ -1,7 +1,7 @@
 const Cryptr = require('cryptr');
 
 const CRYPTR_SECRET = process.env.CRYPTR_SECRET;
-const cryptr = new Cryptr('CRYPTR_SECRET');
+const cryptr = new Cryptr(CRYPTR_SECRET);
 
 const Secret = require('../models/secret');
 
@@ -13,12 +13,12 @@ exports.getSecrets = (req, res, next) => {
 			username,
 		},
 	}).then((secrets) => {
-		res.status(200).json(
-			secrets.map((secret) => {
+		res.status(200).json({
+			secrets: secrets.map((secret) => {
 				secret.value = cryptr.decrypt(secret.value);
 				return secret;
-			})
-		);
+			}),
+		});
 	});
 };
 
@@ -93,9 +93,11 @@ exports.updateSecret = (req, res, next) => {
 				return res.status(403).json({ message: 'Unauthorized' });
 			}
 
-			return secret.update({ key, value }).then(() => {
-				return res.status(200).json({ message: 'Secret deleted' });
-			});
+			return secret
+				.update({ key, value: cryptr.encrypt(value) })
+				.then(() => {
+					return res.status(200).json({ message: 'Secret updated' });
+				});
 		})
 		.catch((err) => {
 			next(err);
